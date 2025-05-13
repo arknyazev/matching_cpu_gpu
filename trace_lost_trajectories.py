@@ -27,11 +27,13 @@ boozmn_filename = 'boozmn_qhb_100.nc'
 saw_file = 'mode/scaled_mode_32.935kHz.npy'
 ic_folder = 'initial_conditions'
 s_init = np.loadtxt(f'{ic_folder}/s0.txt', ndmin=1)
-print(s_init.size)
 equil = Booz_xform()
 equil.verbose = False
 equil.read_boozmn(boozmn_filename)
 nfp = equil.nfp
+
+if comm.rank == 0:
+    print("Interpolating fields...")
 
 bri = BoozerRadialInterpolant(
         equil=equil,
@@ -145,3 +147,5 @@ if comm.rank == 0:
         lost_IDs = []
     for name, array in results.items():
         np.savetxt(f'output/{name}.txt', array)
+if comm.rank == 0:
+    print("All done.")
