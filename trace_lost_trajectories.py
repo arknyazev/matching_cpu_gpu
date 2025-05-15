@@ -38,7 +38,7 @@ if comm.rank == 0:
 bri = BoozerRadialInterpolant(
         equil=equil,
         order=3,
-        no_K=True
+        no_K=False
 )
 
 equil_field = InterpolatedBoozerField(
@@ -112,7 +112,7 @@ gc_tys, gc_hits = trace_particles_boozer_perturbed(
         omegas=[],
         vpars=[],
         stopping_criteria=[
-            MaxToroidalFluxStoppingCriterion(1.0)
+            MaxToroidalFluxStoppingCriterion(0.9)
         ],
         dt_save = 1e-7,
         forget_exact_path=True,
