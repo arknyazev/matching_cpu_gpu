@@ -138,7 +138,7 @@ def check_energy(initial_conditions, field):
 if __name__ == '__main__':
 
     number_of_particles = 5000
-    boozmn_file = '../../../boozmn_qh_50.nc'
+    boozmn_file = '../boozmn_qhb_100.nc'
     equil_helicity = -4 # Check that this matches boozmn_file!
 
     print('Attempt to generate initial condition,',
@@ -169,7 +169,7 @@ if __name__ == '__main__':
         field=bri,
         nfp=nfp,
         min_s=0.1,
-        max_s=0.9,
+        max_s=0.85,
         save=True,
         random_seed=0
         )
