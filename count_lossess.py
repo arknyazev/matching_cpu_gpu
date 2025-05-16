@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import numpy as np
 
 def count_losses(timelost : np.ndarray, tmax: float = 1e-3) -> None:

@@ -1,4 +1,4 @@
-##! /opt/homebrew/Caskroom/miniconda/base/envs/scratch/bin/python
+#!/usr/bin/env python
 '''
 Prepare initial conditions for the orbit loss calculation
 '''

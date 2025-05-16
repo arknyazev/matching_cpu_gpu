@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import numpy as np
 
 tcpu = np.loadtxt('output/timelost.txt')
