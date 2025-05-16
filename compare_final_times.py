@@ -1,7 +1,7 @@
 import numpy as np
 
 tcpu = np.loadtxt('output/timelost.txt')
-tgpu = np.loadtxt('gpu_all_loss_times.txt')
+tgpu = np.loadtxt('output_gpu/timelost.txt')
 
 lost_count = 0
 differ_count = 0

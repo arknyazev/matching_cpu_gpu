@@ -11,4 +11,4 @@ print('\n=== CPU: ===\n')
 count_losses(np.loadtxt('output/timelost.txt'))
 
 print('\n=== GPU: ===\n')
-count_losses(np.loadtxt('gpu_all_loss_times.txt'))
+count_losses(np.loadtxt('output_gpu/timelost.txt'))
