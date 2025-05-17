@@ -155,13 +155,6 @@ last_time = sopp.gpu_tracing_saw(
 	saw_nharmonics=saw_nharmonics)
 
 last_time = np.reshape(last_time, (nparticles, 7))
-print(last_time)
-
-
-particle_data = pd.DataFrame({
-	's_end': last_time[:,0], 't_end':last_time[:,1], 'z_end':last_time[:,2], 'vpar_end':last_time[:,3], 'last_time':last_time[:,4],
-							  'steps_accepted':last_time[:,5], 'steps_attempted':last_time[:,6]})
-particle_data.to_csv('saw_testing/gpu_particle_data.csv')
 
 results = {
     'timelost' : [],
@@ -182,7 +175,7 @@ if not os.path.exists('output_gpu'):
 for name, array in results.items():
     np.savetxt(f'output_gpu/{name}.txt', array)
     
-did_leave = [t < 1e-3 for t in results['last_time']]
+did_leave = [t < 1e-3 for t in results['timelost']]
 
 loss_frac = sum(did_leave) / len(did_leave)
 print(f"Number of particles= {nparticles}")
