@@ -21,9 +21,9 @@ from booz_xform import Booz_xform
 from stellgap import AE3DEigenvector
 
 parser = argparse.ArgumentParser(description='Trace lost trajectories with optional parameters')
-parser.add_argument('--only_first_100_IC', action='store_true', help='Use only the first 100 initial conditions')
+parser.add_argument('--only_first_10_IC', action='store_true', help='Use only the first 100 initial conditions')
 args = parser.parse_args()
-only_first_100_IC = args.only_first_100_IC
+only_first_10_IC = args.only_first_10_IC
 
 try:
     from mpi4py import MPI
@@ -37,7 +37,7 @@ first_thread = (comm.rank == 0) or single_thread
 max_t_seconds = 1e-3
 boozmn_filename = 'boozmn_qhb_100.nc'
 saw_file = 'mode/scaled_mode_32.935kHz.npy'
-ic_folder = 'initial_conditions/first100' if only_first_100_IC else 'initial_conditions'
+ic_folder = 'initial_conditions/first10' if only_first_10_IC else 'initial_conditions'
 s_init = np.loadtxt(f'{ic_folder}/s0.txt', ndmin=1)
 equil = Booz_xform()
 equil.verbose = False
@@ -135,7 +135,7 @@ gc_tys, gc_hits = trace_particles_boozer_perturbed(
         )
 
 if first_thread:
-    output_suffix = '_first100' if only_first_100_IC else ''
+    output_suffix = '_first10' if only_first_10_IC else ''
     output_dir = f'output_nompi{output_suffix}' if single_thread else f'output{output_suffix}'
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
