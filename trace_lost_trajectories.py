@@ -159,16 +159,22 @@ if first_thread:
     vparlost = []
     
     for i in range(len(gc_tys)):
-        np.savetxt(f'{output_dir}/gc_tys_{i}.txt',gc_tys[i])
         s0.append(gc_tys[i][0,1])
         theta0.append(gc_tys[i][0,2])
         zeta0.append(gc_tys[i][0,3])
         vpar0.append(gc_tys[i][0,4])
-        timelost.append(gc_tys[i][1,0])
-        slost.append(gc_tys[i][1,1])
-        thetalost.append(gc_tys[i][1,2])
-        zetalost.append(gc_tys[i][1,3])
-        vparlost.append(gc_tys[i][1,4])
+        if len(gc_hits[i]):
+            timelost.append(gc_hits[i][0,0])
+            slost.append(gc_hits[i][0,2])
+            thetalost.append(gc_hits[i][0,3])
+            zetalost.append(gc_hits[i][0,4])
+            vparlost.append(gc_hits[i][0,5])
+        else:
+            timelost.append(gc_tys[i][1,0])
+            slost.append(gc_tys[i][1,1])
+            thetalost.append(gc_tys[i][1,2])
+            zetalost.append(gc_tys[i][1,3])
+            vparlost.append(gc_tys[i][1,4])
     
     np.savetxt(f'{output_dir}/timelost.txt', timelost)
     np.savetxt(f'{output_dir}/s0.txt', s0)
