@@ -21,7 +21,7 @@ from booz_xform import Booz_xform
 from stellgap import AE3DEigenvector
 
 parser = argparse.ArgumentParser(description='Trace lost trajectories with optional parameters')
-parser.add_argument('--only_first_10_IC', action='store_true', help='Use only the first 100 initial conditions')
+parser.add_argument('--only_first_10_IC', action='store_true', help='Use only the first 10 initial conditions')
 args = parser.parse_args()
 only_first_10_IC = args.only_first_10_IC
 
@@ -159,6 +159,7 @@ if first_thread:
     vparlost = []
     
     for i in range(len(gc_tys)):
+        np.savetxt(f'{output_dir}/gc_tys_{i}.txt',gc_tys[i])
         s0.append(gc_tys[i][0,1])
         theta0.append(gc_tys[i][0,2])
         zeta0.append(gc_tys[i][0,3])
