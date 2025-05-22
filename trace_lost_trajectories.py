@@ -1,6 +1,7 @@
 import os
 import sys
 import numpy as np
+import argparse
 from simsopt.field.boozermagneticfield import (
         BoozerRadialInterpolant,
         InterpolatedBoozerField,
@@ -18,21 +19,32 @@ from simsopt.util.constants import (
         )
 from booz_xform import Booz_xform
 from stellgap import AE3DEigenvector
-from mpi4py import MPI
 
-comm = MPI.COMM_WORLD
+parser = argparse.ArgumentParser(description='Trace lost trajectories with optional parameters')
+parser.add_argument('--only_first_100_IC', action='store_true', help='Use only the first 100 initial conditions')
+args = parser.parse_args()
+only_first_100_IC = args.only_first_100_IC
+
+try:
+    from mpi4py import MPI
+    comm = MPI.COMM_WORLD
+    single_thread = False
+except:
+    comm = None
+    single_thread = True
+first_thread = (comm.rank == 0) or single_thread
 
 max_t_seconds = 1e-3
 boozmn_filename = 'boozmn_qhb_100.nc'
 saw_file = 'mode/scaled_mode_32.935kHz.npy'
-ic_folder = 'initial_conditions'
+ic_folder = 'initial_conditions/first100' if only_first_100_IC else 'initial_conditions'
 s_init = np.loadtxt(f'{ic_folder}/s0.txt', ndmin=1)
 equil = Booz_xform()
 equil.verbose = False
 equil.read_boozmn(boozmn_filename)
 nfp = equil.nfp
 
-if comm.rank == 0:
+if first_thread:
     print("Interpolating fields...")
 
 bri = BoozerRadialInterpolant(
@@ -71,7 +83,7 @@ for harmonic in eigenvector.harmonics:
 saw = ShearAlfvenWavesSuperposition(harmonic_list)
 
 VELOCITY = np.sqrt(2 * ENERGY / MASS)
-if comm.rank == 0:
+if first_thread:
     print('Prepare initial conditions')
     s_init = np.loadtxt(f'{ic_folder}/s0.txt', ndmin=1)
     theta_init = np.loadtxt(f'{ic_folder}/theta0.txt', ndmin=1)
@@ -89,11 +101,12 @@ else:
     vpar_init = None
     mu_per_mass = None
 
-points = comm.bcast(points, root=0)
-vpar_init = comm.bcast(vpar_init, root=0)
-mu_per_mass = comm.bcast(mu_per_mass, root=0)
+if not single_thread:
+    points = comm.bcast(points, root=0)
+    vpar_init = comm.bcast(vpar_init, root=0)
+    mu_per_mass = comm.bcast(mu_per_mass, root=0)
 
-if comm.rank == 0:
+if first_thread:
     print('Begin particle tracking...')
 
 gc_tys, gc_hits = trace_particles_boozer_perturbed(
@@ -114,38 +127,58 @@ gc_tys, gc_hits = trace_particles_boozer_perturbed(
         stopping_criteria=[
             MaxToroidalFluxStoppingCriterion(0.9)
         ],
-        dt_save = 1e-7,
         forget_exact_path=True,
         zetas_stop=False,
         vpars_stop=False,
+        mode = 'gc_vac',
         axis=2
         )
 
-if comm.rank == 0:
-    results = {
-            'timelost' : [],
-            's0' : [],
-            'theta0' : [],
-            'zeta0' : [],
-            'vpar0' : [],
-            'slost' : [],
-            'thetalost' : [],
-            'zetalost' : [],
-            'vparlost' : []
-        }
+if first_thread:
+    output_suffix = '_first100' if only_first_100_IC else ''
+    output_dir = f'output_nompi{output_suffix}' if single_thread else f'output{output_suffix}'
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    
     print('Save IDs of lost particles')
+    print(f"Total particles tracked: {len(gc_tys)}")
+    
+    if len(gc_tys) > 0:
+        print(f"First particle data shape: {gc_tys[0].shape}")
+        print(f"First particle initial state: {gc_tys[0][0, :]}")
+        print(f"First particle final state: {gc_tys[0][1, :]}")
+    
+    timelost = []
+    s0 = []
+    theta0 = []
+    zeta0 = []
+    vpar0 = []
+    slost = []
+    thetalost = []
+    zetalost = []
+    vparlost = []
+    
     for i in range(len(gc_tys)):
-        results['s0'].append(gc_tys[i][0,1])
-        results['theta0'].append(gc_tys[i][0,2])
-        results['zeta0'].append(gc_tys[i][0,3])
-        results['vpar0'].append(gc_tys[i][0,4])
-        results['timelost'].append(gc_tys[i][-1,0])
-        results['slost'].append(gc_tys[i][-1,1])
-        results['thetalost'].append(gc_tys[i][-1,2])
-        results['zetalost'].append(gc_tys[i][-1,3])
-        results['vparlost'].append(gc_tys[i][-1,4])
-        lost_IDs = []
-    for name, array in results.items():
-        np.savetxt(f'output/{name}.txt', array)
-if comm.rank == 0:
+        s0.append(gc_tys[i][0,1])
+        theta0.append(gc_tys[i][0,2])
+        zeta0.append(gc_tys[i][0,3])
+        vpar0.append(gc_tys[i][0,4])
+        timelost.append(gc_tys[i][1,0])
+        slost.append(gc_tys[i][1,1])
+        thetalost.append(gc_tys[i][1,2])
+        zetalost.append(gc_tys[i][1,3])
+        vparlost.append(gc_tys[i][1,4])
+    
+    np.savetxt(f'{output_dir}/timelost.txt', timelost)
+    np.savetxt(f'{output_dir}/s0.txt', s0)
+    np.savetxt(f'{output_dir}/theta0.txt', theta0)
+    np.savetxt(f'{output_dir}/zeta0.txt', zeta0)
+    np.savetxt(f'{output_dir}/vpar0.txt', vpar0)
+    np.savetxt(f'{output_dir}/slost.txt', slost)
+    np.savetxt(f'{output_dir}/thetalost.txt', thetalost)
+    np.savetxt(f'{output_dir}/zetalost.txt', zetalost)
+    np.savetxt(f'{output_dir}/vparlost.txt', vparlost)
+if first_thread:
     print("All done.")
+    print(f"Processed {len(gc_tys)} particles")
+    print(f"Results saved to {output_dir}")
